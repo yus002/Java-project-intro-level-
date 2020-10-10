@@ -1,0 +1,185 @@
+Color complementColor(Color c){
+
+  return new Color(c.getRed(), c.getBlue(), c.getGreen());
+
+}
+
+Color[] complementPixels(Color[] originalPixels) {
+
+  int size = originalPixels.length;
+
+	 Color[] newArray = new Color[size];
+
+	 for(int i = 0; i < size; i += 1) {
+
+	newArray[i] = complementColor(originalPixels[i]);
+
+}
+
+  return newArray;
+
+}
+
+
+Image complement(Image original) {
+
+  int width = original.getWidth();
+
+  int height = original.getHeight();
+
+  Color[] pixels =  complementPixels(original.getPixels());
+
+  return new Image(width, height, pixels);
+
+}
+
+
+
+Color chromascaleColor(Color c, Color target) {
+
+  int Average = (c.getRed() + c.getGreen() + c.getBlue())/3;
+
+  double AverageRatioValue = (intToDouble(Average)/255);
+
+  int Red = doubleToInt((intToDouble(target.getRed()) * AverageRatioValue));
+
+  int Green = doubleToInt((intToDouble(target.getGreen()) * AverageRatioValue));
+
+  int Blue = doubleToInt((intToDouble(target.getBlue()) * AverageRatioValue));
+
+  return new Color(Red, Green, Blue);
+
+}
+
+
+Color[] chromascalePixels(Color[] originalPixels, Color target) {
+
+  int size = originalPixels.length;
+
+	 Color[] newArray = new Color[size];
+
+	 for(int i = 0; i < size; i += 1) {
+
+	newArray[i] = chromascaleColor(originalPixels[i], target);
+
+}
+
+  return newArray;
+
+}
+
+
+
+Image chromascale(Image original, Color target) {
+
+  int width = original.getWidth();
+
+  int height = original.getHeight();
+
+  Color[] pixels = chromascalePixels(original.getPixels(),target);
+
+  return new Image(width, height, pixels);
+
+}
+
+Image chromascaleExample1 = chromascale(ExampleImage1, Template3);
+
+Image chromascaleExample2 = chromascale(ExampleImage2, Template3);
+
+Color gradientColor(Color color1, Color color2, double weightFor1) {
+
+  double weight2 = 1 - weightFor1;
+
+  int Red = doubleToInt(color1.getRed() * weightFor1 + color2.getRed() * weight2);
+
+  int Green = doubleToInt(color1.getGreen() * weightFor1 + color2.getGreen() * weight2);
+
+  int Blue = doubleToInt(color1.getBlue() * weightFor1 + color2.getBlue() * weight2);
+
+  return new Color(Red, Green, Blue);
+
+}
+
+
+Color[] gradientPixels(int numPixels, Color color1, Color color2) {
+
+  int size = numPixels;
+
+	 Color[] newArray = new Color[size];
+
+	 for(int i = 0; i < size; i += 1) {
+
+	newArray[i] = gradientColor(color1, color2, 1 - (i*1.0)/size);
+
+}
+
+  return newArray;
+
+}
+
+
+Image gradient (int imageWidth, int imageHeight, Color color1, Color color2) {
+
+  int width = imageWidth;
+
+  int height = imageHeight;
+
+  Color[] pixels = gradientPixels(imageWidth * imageHeight, color1, color2);
+
+  return new Image(width, height, pixels);
+
+}
+
+
+Color chromakeyColor(Color fgColor, Color bgColor, Color key, double threshold) {
+
+  Color Final = new Color(0, 0, 0);
+
+  double distance = ((fgColor.getRed() - key.getRed()) * (fgColor.getRed() - key.getRed()) + (fgColor.getGreen() - key.getGreen()) * (fgColor.getGreen() - key.getGreen()) + (fgColor.getBlue() - key.getBlue()) * (fgColor.getBlue() - key.getBlue()))/1000.0;
+
+  if(distance <= threshold) {
+
+	Final = new Color(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue());
+
+  }
+
+  else {
+
+	Final = new Color(fgColor.getRed(), fgColor.getGreen(), fgColor.getBlue());
+
+  }
+
+  return Final;
+
+}
+
+
+
+Color[] chromakeyPixels(Color[] fgPixels, Color[] bgPixels, Color key, double threshold) {
+
+  Color[] newArray = new Color[fgPixels.length];
+
+  for (int i = 0; i < fgPixels.length; i += 1) {
+
+   newArray[i] = chromakeyColor(fgPixels[i], bgPixels[i], key, threshold);
+
+}
+
+  return newArray;
+
+}
+
+
+
+Image chromakey(Image fg, Image bg, Color key, double threshold) {
+
+  int width = fg.getWidth();
+
+  int height = fg.getHeight();
+
+  Color[] pixels = chromakeyPixels(fg.getPixels(), bg.getPixels(), key, threshold);
+
+  return new Image(width, height, pixels);
+
+}
+
