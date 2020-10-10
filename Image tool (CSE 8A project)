@@ -1,0 +1,270 @@
+import java.awt.Color;
+import java.util.Arrays;
+
+class Collage {
+  public static void main(String[] args) {
+    Image canvas1 = ImageLibRef.canvasProvided(1280, 1280, new Color(0, 255, 0));
+    Image imageExample = CSE8ALib.readImage("image-files/pixel-heart.png");
+    int height = imageExample.getHeight();
+    int width = imageExample.getWidth();
+    Image imageExample1 = ImageLibRef.chromascale(imageExample, new Color(255, 0, 0));
+    Image imageExample2 = ImageLibRef.chromascale(imageExample, new Color(0, 255, 0));
+    Image imageExample3 = ImageLibRef.chromascale(imageExample, new Color(0, 0, 255));
+    Image Collage1 = ImageLibRef.overlayProvided(imageExample, canvas1, 0, 0);
+    Image Collage2 = ImageLibRef.overlayProvided(imageExample1, Collage1, 0, height);
+    Image Collage3 = ImageLibRef.overlayProvided(imageExample2, Collage2, width, 0);
+    Image Collage4 = ImageLibRef.overlayProvided(imageExample3, Collage3, width, height);
+    System.out.println("canvas1: " + canvas1.toString());
+    CSE8ALib.explore(Collage4);
+  }
+}
+ImageLib.java
+
+import java.awt.Color;
+import java.util.Arrays;
+
+class ImageLib {
+  public static void main(String[] args) {
+
+  }
+//1.scaleTo
+    public static Color scaleToColor(Image original, int targetWidth, int targetHeight, int col, int row) {
+       int originalCol = CSE8ALib.doubleToInt(col*original.getWidth()/targetWidth);
+       int originalRow = CSE8ALib.doubleToInt(row*original.getHeight()/targetHeight);
+       return original.getColorAtPos(originalCol, originalRow);
+     }
+
+     public static Color[] scalePixels(Image original, int targetWidth, int targetHeight) {
+         int size = targetWidth * targetHeight;
+         Color[] newArray = new Color[size];
+         for(int col = 0; col < targetWidth; col += 1) {
+           for(int row = 0; row < targetHeight; row += 1) {
+             newArray[row * targetWidth + col] = ImageLib.scaleToColor(original, targetWidth, targetHeight, col, row);
+           }
+         }
+         return newArray;
+       }
+
+      public static Image scaleTo(Image original, int targetWidth, int targetHeight) {
+         int width = targetWidth;
+         int height = targetHeight;
+         Color[] pixels = ImageLib.scalePixels(original, targetWidth, targetHeight);
+         return new Image(targetWidth, targetHeight, pixels);
+       }
+
+2.// canvas
+
+  public static Color[] canvasPixels(int width, int height, Color color){
+	int size = width * height;
+	Color[] newArray = new Color[size];
+	for(int i = 0; i < size; i += 1) {
+  	newArray[i] = color;
+	}
+	return newArray;
+  }
+  public static Image canvas(int width, int height, Color color) {
+	Color[] pixels = ImageLib.canvasPixels(width, height, color);
+	return new Image(width, height, pixels);
+  }
+// 3. Frame
+// frame
+public static Color[] framePixels(int width, int height, Image original, int thickness, Color color){
+  int imageWidth = original.getWidth();
+  int imageHeight = original.getHeight();
+
+  int size = width*height;
+
+  Color[] newArray = new Color[size];
+  for(int col=0 ; col <width; col+=1){
+	for(int row=0; row < height; row+=1){
+  	if( col>= thickness && col < thickness+ imageWidth && row>=thickness && row < thickness + imageHeight  ){
+    	newArray[row*width+col] = original.getPixels()[(row-thickness)*imageWidth + (col-thickness)];
+  	}
+  	else {
+    	newArray[row*width + col] = color;
+  	}
+	}
+  }
+  return newArray;
+  }
+  public static Image frame(Image original, int thickness, Color color){
+	int width = 2*thickness+original.getWidth();
+	int height = 2*thickness+original.getHeight();
+	Color[] pixels = ImageLib.framePixels(width, height, original, thickness, color  );
+	return new Image(width, height, pixels);
+  }
+
+// 4. crop
+public static Color[] cropPixels(Image original, int width, int height,int topLeftCol, int topLeftRow, int bottomRightCol, int bottomRightRow){
+	int size = width*height;
+	int originalWidth= original.getWidth();
+	int originalHeight= original.getHeight();
+
+	Color[] newArray = new Color[size];
+	for(int col=0 ; col < originalWidth; col+=1){
+  	for(int row=0; row < originalHeight; row+=1){
+    	if( (col>= topLeftCol) && (col < bottomRightCol) && (row>=topLeftRow) && (row < bottomRightRow) ){
+      	newArray[(row-topLeftRow)*width+(col-topLeftCol)] = original.getPixels()[row*originalWidth+col];
+    	}
+
+  	}
+	}
+	return newArray;
+  }
+  public static Image crop(Image original, int topLeftCol, int topLeftRow, int bottomRightCol, int bottomRightRow){
+	int width = bottomRightCol-topLeftCol;
+	int height = bottomRightRow-topLeftRow;
+	Color[] pixels = ImageLib.cropPixels(original, width,height,  topLeftCol,  topLeftRow, bottomRightCol, bottomRightRow);
+	return new Image(width, height, pixels);
+  }
+
+
+//5. overlay
+ public static Color[] overlayPixels(Image fg, Image bg, int topLeftCol, int topLeftRow) {
+        int fgWidth = fg.getWidth();
+        int fgHeight = fg.getHeight();
+        int bgWidth = bg.getWidth();
+        int bgHeight = bg.getHeight();
+        int size = bgWidth * bgHeight;
+        Color[] newArray = new Color[size];
+        for(int col = 0; col < bgWidth; col+= 1) {
+          for(int row = 0; row < bgHeight; row+=1 ) {
+            if(col>=topLeftCol && col<(topLeftCol+fgWidth) && row>=topLeftRow && row<(topLeftRow+fgHeight)){
+              newArray[row*bgWidth+col] = fg.getPixels()[(row-topLeftRow)*fgWidth + (col-topLeftCol)];
+            }
+            else {
+              newArray[row*bgWidth + col] = bg.getPixels()[row*bgWidth + col];
+            }
+          }
+        }
+        return newArray;
+      }
+      public static Image overlay(Image fg, Image bg, int topLeftCol, int topLeftRow){
+        int width = bg.getWidth();
+        int height = bg.getHeight();
+        Color[] pixels = ImageLib.overlayPixels(fg, bg, topLeftCol, topLeftRow);
+        return new Image(width, height, pixels);
+
+
+  }
+
+
+PA7
+
+class PA7 {
+  public static void main(String[] args) {
+    Color[] examplePixels = {new Color(255, 0, 0), new Color(0, 255, 0), new Color(0, 0, 255),
+                            new Color(0, 0, 0), new Color(128, 128, 128), new Color(255, 255, 255)};
+    Image exampleImage = new Image(3, 2, examplePixels);
+    Image checker = CSE8ALib.readImage("image-files/checker5.bmp");
+    Image crane = CSE8ALib.readImage("image-files/crane.jpg");
+
+
+    //1.scaleTo
+    Image scaleTo1 = ImageLib.scaleTo(exampleImage, 3, 3);
+    Color[] scaleTo1PixelsExpect = {
+      new Color(255, 0, 0), new Color(0, 255, 0), new Color(0, 0, 255),
+      new Color(255, 0, 0), new Color(0, 255, 0), new Color(0, 0, 255),
+      new Color(0, 0, 0), new Color(128, 128, 128), new Color(255, 255, 255)};
+
+    System.out.println("scaleTo1 image :        " + scaleTo1.toString());
+    System.out.println("scaleTo1 image expect:  Image[width=3,height=3]");
+    System.out.println("scaleTo1 pixels:        " + Arrays.toString(scaleTo1.getPixels()));
+    System.out.println("scaleTo1 pixels expect: " + Arrays.toString(scaleTo1PixelsExpect));
+
+    Image scaleTo2 = ImageLib.scaleTo(exampleImage, 2, 2);
+    Color[] scaleTo2PixelsExpect = {
+      new Color(255, 0, 0), new Color(0, 255, 0),
+      new Color(0, 0, 0), new Color(128, 128, 128),
+    };
+    System.out.println("scaleTo2 image :        " + scaleTo2.toString());
+    System.out.println("scaleTo2 dims expect:   Image[width=2,height=2]");
+    System.out.println("scaleTo2 pixels:        " + Arrays.toString(scaleTo2.getPixels()));
+    System.out.println("scaleTo2 pixels expect: " + Arrays.toString(scaleTo2PixelsExpect));
+
+    Image scaleTocrane = ImageLib.scaleTo(crane, 200, 100);
+    CSE8ALib.explore(scaleTocrane);
+
+
+
+// 2.canvas
+ Color canvasExample1 = new Color(0, 255, 0);
+	Image canvas1 = ImageLib.canvas(2, 2, canvasExample1);
+	Color[] canvas1PixelsExpect= {
+  	new Color(0,255,0),new Color(0,255,0),
+  	new Color(0,255,0),new Color(0,255,0)};
+	System.out.println("canvas1 image:   " + canvas1.toString());
+	System.out.println("canvas1 image expect:	Image[width=2, height=2]");
+	System.out.println("canvas1 pixels:	" + Arrays.toString(canvas1.getPixels()));
+	System.out.println("canvas1 pixels expect:   " + Arrays.toString(canvas1PixelsExpect));
+
+	Color canvasExample2 = new Color(255,0,0);
+	Image canvas2 = ImageLib.canvas(3,3,canvasExample2);
+	Color[] canvas2PixelsExpect={
+  	new Color(255,0,0),new Color(255,0,0),new Color(255,0,0),
+  	new Color(255,0,0),new Color(255,0,0),new Color(255,0,0)};
+	System.out.println("canvas2 image:   " + canvas2.toString());
+	System.out.println("canvas2 image expect:	Image[width=3, height=3]");
+	System.out.println("canvas2 pixels:	" + Arrays.toString(canvas2.getPixels()));
+	System.out.println("canvas2 pixels expect:   " + Arrays.toString(canvas2PixelsExpect));
+
+	Image canvasImage= ImageLib.canvas(200,100,canvasExample1);
+	CSE8ALib.explore(canvasImage);
+
+
+3. Frame example
+
+
+Still needs 2 examples
+
+
+Image heart= CSE8ALib.readImage("image-files/checker200.bmp");
+Image framethirdExample = ImageLib.frame(heart, 60, new Color(0,0,255));
+CSE8ALib.explore(framethirdExample);
+
+
+
+
+5. Overlay example:
+  Color[] fgPixels = {new Color(64, 124, 224), new Color(64, 124, 224), new Color(64, 124, 224)};
+    Image fgImage1 = new Image (10, 10, fgPixels);
+    Image overlay1 = ImageLib.overlay(fgImage1, exampleImage, 1, 0);
+    Color[] overlay1PixelsExpected = {new Color(255, 0 ,0)};
+    System.out.println("overlay1 image:   " + overlay1.toString());
+    System.out.println("overlay1 image expect:	Image[width=3, height=3]");
+    System.out.println("overlay1 pixels:	" + Arrays.toString(overlay1.getPixels()));
+    System.out.println("overlay1 pixels expect:   " + Arrays.toString(overlay1PixelsExpected));
+
+    Image fgImage2 = new Image (1, 3, fgPixels);
+    Image overlay2 = ImageLib.overlay(fgImage1, exampleImage, 2, 0);
+    Color[] overlay2PixelsExpected = {new Color(255, 0 ,0)};
+    System.out.println("overlay2 image:   " + overlay2.toString());
+    System.out.println("overlay2 image expect:	Image[width=3, height=3]");
+    System.out.println("overlay2 pixels:	" + Arrays.toString(overlay2.getPixels()));
+    System.out.println("overlay2 pixels expect:   " + Arrays.toString(overlay2PixelsExpected));
+
+    Image overlaycrane = ImageLib.overlay(fgImage1, crane, 2, 2);
+    CSE8ALib.explore(overlaycrane);
+
+
+ name the image as “color-collage.png” and save it in image-files
+
+
+
+TASK 3 
+
+  Image heart= CSE8ALib.readImage("image-files/pixel-heart.png");
+	Image crane= CSE8ALib.readImage("image-files/crane.jpg");
+	Image man= CSE8ALib.readImage("image-files/grace-hopper.png");
+	Image box= CSE8ALib.readImage("image-files/checker200.bmp");
+	Image scaleToman =  ImageLib.scaleTo(man, 100,100);
+	Image scaleTocrane= ImageLib.scaleTo(crane,70,70);
+	Image scaleToheart= ImageLib.scaleTo(heart,200,200);
+	Image cropbox= ImageLib.crop(box, 50,50,150,150);
+	Image bluecanvas= ImageLib.canvas(300,300, new Color(0,0,150));
+	Image overlay2images= ImageLib.overlay(scaleToheart,ImageLib.overlay(cropbox, bluecanvas,0,0), 100,100);
+	Image overlay3images= ImageLib.overlay(scaleToman, overlay2images, 100,100);
+	Image overlay4images= ImageLib.overlay(scaleTocrane,overlay3images, 200, 200);
+	Image myCollage= ImageLib.frame(overlay4images, 40, new Color(180,20,20));
+	CSE8ALib.explore(myCollage);
+
